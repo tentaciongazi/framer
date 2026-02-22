@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framer — Screenshot Beautifier</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #e8ff57;
+    --text: #f0f0f0;
+    --muted: #555;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,87,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,87,0.025) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .lang-switcher {
+    display: flex;
+    gap: 4px;
+  }
+
+  .lang-btn {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .lang-btn:hover { color: var(--text); }
+  .lang-btn.active { background: var(--accent); color: #0a0a0a; }
+
+
+  main {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 100px 32px 60px;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 62px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 14px;
+  }
+
+  h1 em { font-style: normal; color: var(--accent); }
+
+  .sub {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 300;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* Controls */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .control-group {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .bg-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .bg-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .bg-swatch:hover { transform: scale(1.1); }
+  .bg-swatch.active { border-color: var(--accent); transform: scale(1.1); }
+
+  .frame-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .frame-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .frame-btn:hover { color: var(--text); border-color: rgba(240,240,240,0.2); }
+  .frame-btn.active { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+
+  .padding-slider {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* Upload */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 18px;
+    padding: 56px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--surface);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(232,255,87,0.02); }
+
+  .upload-icon {
+    width: 56px; height: 56px;
+    margin: 0 auto 16px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+  }
+  .upload-zone:hover .upload-icon { border-color: var(--accent); background: rgba(232,255,87,0.08); }
+  .upload-icon svg { width: 24px; height: 24px; stroke: var(--muted); transition: stroke 0.3s; }
+  .upload-zone:hover .upload-icon svg { stroke: var(--accent); }
+
+  .upload-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .upload-sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+
+  .upload-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 11px 26px;
+    background: var(--accent); color: #0a0a0a;
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .upload-btn:hover { background: #d4eb40; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,255,87,0.25); }
+
+  #fileInput { display: none; }
+
+  /* Preview */
+  .preview-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .preview-wrap.visible { display: flex; }
+
+  .canvas-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    overflow: auto;
+  }
+
+  #canvas {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; border: none;
+  }
+
+  .btn-primary { background: var(--accent); color: #0a0a0a; }
+  .btn-primary:hover { background: #d4eb40; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(232,255,87,0.25); }
+
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: rgba(240,240,240,0.2); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">fra<span>mer</span></div>
+  <div class="lang-switcher" id="langSwitcher">
+    <button class="lang-btn active" data-lang="en">🇬🇧 EN</button>
+    <button class="lang-btn" data-lang="tr">🇹🇷 TR</button>
+    <button class="lang-btn" data-lang="es">🇪🇸 ES</button>
+    <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+    <button class="lang-btn" data-lang="de">🇩🇪 DE</button>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <h1 id="i18n-title">Make your screenshots<br><em id="i18n-title-em">look stunning.</em></h1>
+    <p class="sub" id="i18n-sub">Upload a screenshot, pick a background and frame style, download as PNG.</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <label id="i18n-bg">Background</label>
+      <div class="bg-options" id="bgOptions">
+        <div class="bg-swatch active" data-type="gradient" data-value="purple" style="background: linear-gradient(135deg,#667eea,#764ba2)" title="Purple"></div>
+        <div class="bg-swatch" data-type="gradient" data-value="sunset" style="background: linear-gradient(135deg,#f093fb,#f5576c)" title="Sunset"></div>
+        <div class="bg-swatch" data-type="gradient" data-value="ocean" style="background: linear-gradient(135deg,#4facfe,#00f2fe)" title="Ocean"></div>
+        <div class="bg-swatch" data-type="gradient" data-value="forest" style="background: linear-gradient(135deg,#43e97b,#38f9d7)" title="Forest"></div>
+        <div class="bg-swatch" data-type="gradient" data-value="fire" style="background: linear-gradient(135deg,#fa709a,#fee140)" title="Fire"></div>
+        <div class="bg-swatch" data-type="gradient" data-value="night" style="background: linear-gradient(135deg,#0f0c29,#302b63,#24243e)" title="Night"></div>
+        <div class="bg-swatch" data-type="solid" data-value="#0a0a0a" style="background:#0a0a0a;border:1px solid #333" title="Black"></div>
+        <div class="bg-swatch" data-type="solid" data-value="#ffffff" style="background:#ffffff" title="White"></div>
+        <div class="bg-swatch" data-type="solid" data-value="#e8ff57" style="background:#e8ff57" title="Lime"></div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label id="i18n-frame">Frame Style</label>
+      <div class="frame-options">
+        <button class="frame-btn active" data-frame="macos">macOS</button>
+        <button class="frame-btn" data-frame="simple">Simple</button>
+        <button class="frame-btn" data-frame="none">None</button>
+      </div>
+    </div>
+
+    <div class="control-group" style="grid-column: span 2">
+      <label>Padding — <span id="paddingVal">60</span>px</label>
+      <input type="range" class="padding-slider" id="paddingSlider" min="20" max="120" value="60">
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    </div>
+    <div class="upload-title" id="i18n-drop">Drop your screenshot here</div>
+    <div class="upload-sub" id="i18n-formats">PNG, JPG, WEBP supported</div>
+    <button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span id="i18n-choose">Choose Screenshot</span>
+    </button>
+    <input type="file" id="fileInput" accept="image/*">
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-wrap" id="previewWrap">
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="downloadImage()">📥 <span id="i18n-download">Download PNG</span></button>
+      <button class="btn btn-ghost" onclick="resetApp()">← <span id="i18n-new">New Screenshot</span></button>
+    </div>
+  </div>
+</main>
+
+<script>
+  // i18n
+  const i18n = {
+    en: {
+      title: 'Make your screenshots', titleEm: 'look stunning.',
+      sub: 'Upload a screenshot, pick a background and frame style, download as PNG.',
+      bg: 'Background', frame: 'Frame Style',
+      drop: 'Drop your screenshot here', formats: 'PNG, JPG, WEBP supported',
+      choose: 'Choose Screenshot', download: 'Download PNG', new: 'New Screenshot',
+    },
+    tr: {
+      title: 'Ekran görüntülerini', titleEm: 'çarpıcı hale getir.',
+      sub: 'Ekran görüntüsü yükle, arka plan ve çerçeve seç, PNG olarak indir.',
+      bg: 'Arka Plan', frame: 'Çerçeve Stili',
+      drop: 'Ekran görüntüsünü buraya sürükle', formats: 'PNG, JPG, WEBP desteklenir',
+      choose: 'Görsel Seç', download: 'PNG İndir', new: 'Yeni Görsel',
+    },
+    es: {
+      title: 'Haz que tus capturas', titleEm: 'luzcan increíbles.',
+      sub: 'Sube una captura, elige fondo y estilo de marco, descarga como PNG.',
+      bg: 'Fondo', frame: 'Estilo de Marco',
+      drop: 'Arrastra tu captura aquí', formats: 'PNG, JPG, WEBP soportados',
+      choose: 'Elegir imagen', download: 'Descargar PNG', new: 'Nueva imagen',
+    },
+    fr: {
+      title: 'Rendez vos captures', titleEm: 'vraiment belles.',
+      sub: 'Importez une capture, choisissez un fond et un cadre, téléchargez en PNG.',
+      bg: 'Arrière-plan', frame: 'Style de cadre',
+      drop: 'Déposez votre capture ici', formats: 'PNG, JPG, WEBP supportés',
+      choose: 'Choisir une image', download: 'Télécharger PNG', new: 'Nouvelle image',
+    },
+    de: {
+      title: 'Mach deine Screenshots', titleEm: 'wirklich beeindruckend.',
+      sub: 'Screenshot hochladen, Hintergrund und Rahmen wählen, als PNG herunterladen.',
+      bg: 'Hintergrund', frame: 'Rahmenstil',
+      drop: 'Screenshot hier ablegen', formats: 'PNG, JPG, WEBP unterstützt',
+      choose: 'Bild auswählen', download: 'PNG herunterladen', new: 'Neues Bild',
+    },
+  }
+
+  function applyLang(lang) {
+    const t = i18n[lang]
+    document.getElementById('i18n-title').childNodes[0].textContent = t.title + '\n'
+    document.getElementById('i18n-title-em').textContent = t.titleEm
+    document.getElementById('i18n-sub').textContent = t.sub
+    document.getElementById('i18n-bg').textContent = t.bg
+    document.getElementById('i18n-frame').textContent = t.frame
+    document.getElementById('i18n-drop').textContent = t.drop
+    document.getElementById('i18n-formats').textContent = t.formats
+    document.getElementById('i18n-choose').textContent = t.choose
+    document.getElementById('i18n-download').textContent = t.download
+    document.getElementById('i18n-new').textContent = t.new
+  }
+
+  document.getElementById('langSwitcher').addEventListener('click', e => {
+    const btn = e.target.closest('.lang-btn')
+    if (!btn) return
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    applyLang(btn.dataset.lang)
+  })
+
+
+  const canvas = document.getElementById('canvas')
+  const ctx = canvas.getContext('2d')
+  const uploadZone = document.getElementById('uploadZone')
+  const previewWrap = document.getElementById('previewWrap')
+  const paddingSlider = document.getElementById('paddingSlider')
+  const paddingVal = document.getElementById('paddingVal')
+
+  // State
+  let currentImg = null
+  let currentBg = { type: 'gradient', value: 'purple' }
+  let currentFrame = 'macos'
+  let padding = 60
+
+  // Gradients
+  const gradients = {
+    purple: ['#667eea', '#764ba2'],
+    sunset: ['#f093fb', '#f5576c'],
+    ocean:  ['#4facfe', '#00f2fe'],
+    forest: ['#43e97b', '#38f9d7'],
+    fire:   ['#fa709a', '#fee140'],
+    night:  ['#0f0c29', '#24243e'],
+  }
+
+  // File input
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) loadImage(e.target.files[0])
+  })
+
+  // Drag & drop
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag') })
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'))
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault()
+    uploadZone.classList.remove('drag')
+    if (e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0])
+  })
+  uploadZone.addEventListener('click', () => fileInput.click())
+
+  // Background swatches
+  document.getElementById('bgOptions').addEventListener('click', e => {
+    const swatch = e.target.closest('.bg-swatch')
+    if (!swatch) return
+    document.querySelectorAll('.bg-swatch').forEach(s => s.classList.remove('active'))
+    swatch.classList.add('active')
+    currentBg = { type: swatch.dataset.type, value: swatch.dataset.value }
+    if (currentImg) render()
+  })
+
+  // Frame buttons
+  document.querySelectorAll('.frame-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.frame-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      currentFrame = btn.dataset.frame
+      if (currentImg) render()
+    })
+  })
+
+  // Padding slider
+  paddingSlider.addEventListener('input', () => {
+    padding = parseInt(paddingSlider.value)
+    paddingVal.textContent = padding
+    if (currentImg) render()
+  })
+
+  function loadImage(file) {
+    const img = new Image()
+    img.src = URL.createObjectURL(file)
+    img.onload = () => {
+      currentImg = img
+      uploadZone.style.display = 'none'
+      previewWrap.classList.add('visible')
+      render()
+    }
+  }
+
+  function render() {
+    const img = currentImg
+    const frameHeight = currentFrame === 'macos' ? 40 : currentFrame === 'simple' ? 10 : 0
+    const p = padding
+
+    canvas.width  = img.width  + p * 2
+    canvas.height = img.height + p * 2 + frameHeight
+
+    // --- Background ---
+    if (currentBg.type === 'solid') {
+      ctx.fillStyle = currentBg.value
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    } else {
+      const colors = gradients[currentBg.value]
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+      grad.addColorStop(0, colors[0])
+      grad.addColorStop(1, colors[colors.length - 1])
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    }
+
+    // --- Shadow under window ---
+    ctx.shadowColor = 'rgba(0,0,0,0.4)'
+    ctx.shadowBlur = 40
+    ctx.shadowOffsetY = 12
+    ctx.fillStyle = 'transparent'
+    ctx.fillRect(p - 2, p + frameHeight - 2, img.width + 4, img.height + 4)
+    ctx.shadowColor = 'transparent'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetY = 0
+
+    // --- Frame ---
+    if (currentFrame === 'macos') {
+      // Window bar
+      ctx.fillStyle = '#1e1e1e'
+      roundRect(ctx, p, p, img.width, frameHeight, [10, 10, 0, 0])
+      ctx.fill()
+
+      // Traffic lights
+      const dots = [
+        { x: p + 18, color: '#ff5f57' },
+        { x: p + 38, color: '#febc2e' },
+        { x: p + 58, color: '#28c840' },
+      ]
+      dots.forEach(dot => {
+        ctx.fillStyle = dot.color
+        ctx.beginPath()
+        ctx.arc(dot.x, p + 20, 6, 0, Math.PI * 2)
+        ctx.fill()
+      })
+    } else if (currentFrame === 'simple') {
+      ctx.fillStyle = '#1e1e1e'
+      roundRect(ctx, p, p, img.width, frameHeight, [4, 4, 0, 0])
+      ctx.fill()
+    }
+
+    // --- Screenshot ---
+    // Clip so image doesn't overflow rounded corners
+    ctx.save()
+    roundRect(ctx, p, p + frameHeight, img.width, img.height,
+      currentFrame === 'none' ? [10, 10, 10, 10] : [0, 0, 10, 10])
+    ctx.clip()
+    ctx.drawImage(img, p, p + frameHeight, img.width, img.height)
+    ctx.restore()
+  }
+
+  // Helper: rounded rectangle path
+  function roundRect(ctx, x, y, w, h, radii) {
+    const [tl, tr, br, bl] = Array.isArray(radii) ? radii : [radii, radii, radii, radii]
+    ctx.beginPath()
+    ctx.moveTo(x + tl, y)
+    ctx.lineTo(x + w - tr, y)
+    ctx.arcTo(x + w, y, x + w, y + tr, tr)
+    ctx.lineTo(x + w, y + h - br)
+    ctx.arcTo(x + w, y + h, x + w - br, y + h, br)
+    ctx.lineTo(x + bl, y + h)
+    ctx.arcTo(x, y + h, x, y + h - bl, bl)
+    ctx.lineTo(x, y + tl)
+    ctx.arcTo(x, y, x + tl, y, tl)
+    ctx.closePath()
+  }
+
+  function downloadImage() {
+    const a = document.createElement('a')
+    a.download = 'framer_' + Date.now() + '.png'
+    a.href = canvas.toDataURL('image/png')
+    a.click()
+  }
+
+  function resetApp() {
+    currentImg = null
+    uploadZone.style.display = 'block'
+    previewWrap.classList.remove('visible')
+    fileInput.value = ''
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+</script>
+</body>
+</html>
